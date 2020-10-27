@@ -19,23 +19,16 @@ use App\Manager\PokemonManager;
  */
 class PokemonController
 {
-    private $em;
-
-    private $pokemonRepository;
+    private $pokemonManager;
     private $serializer;
 
-    private $pokemonManager;
-
-    public function __construct(EntityManagerInterface $em, PokemonRepository $pokemonRepository, PokemonManager $pokemonManager)
+    public function __construct(PokemonManager $pokemonManager)
     {
-        $this->em = $em;
-        $this->pokemonRepository = $pokemonRepository;
+        $this->pokemonManager = $pokemonManager;
+
         $encoders = [new XmlEncoder(), new JsonEncoder()];
         $normalizers = [new ObjectNormalizer()];
-
         $this->serializer = new Serializer($normalizers, $encoders);
-    
-        $this->pokemonManager = $pokemonManager;
     }
 
     /** 
@@ -43,10 +36,11 @@ class PokemonController
      * 
      * @Route("", methods={"GET"})
     */
-    public function index()
+    public function list()
     {
-        $pokemons = $this->pokemonRepository->findAll();
+        $pokemons = $this->pokemonManager->getAll();
         $jsonContent = $this->serializer->serialize($pokemons, 'json');
+
         return new Response($jsonContent);
     }
 
@@ -61,7 +55,6 @@ class PokemonController
         $summary = $request->request->get('summary');
 
         $pokemon = $this->pokemonManager->create($name, $summary);
-
         $json = $this->serializer->serialize($pokemon, 'json');
 
         return new Response($json);
@@ -78,7 +71,6 @@ class PokemonController
         $summary = $request->request->get('summary');
 
         $pokemon = $this->pokemonManager->update($name, $summary, $id);
-
         $json = $this->serializer->serialize($pokemon, 'json');
 
         return new Response($json);
@@ -91,8 +83,9 @@ class PokemonController
      */
     public function delete(int $id)
     {
-        $this->pokemonManager->delete($id);
+        $pokemon = $this->pokemonManager->delete($id);
+        $json = $this->serializer->serialize($pokemon, 'json');
 
-        return new Response("pokemon supprimer");
+        return new Response($json);
     }
 }

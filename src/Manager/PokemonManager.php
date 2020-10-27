@@ -6,12 +6,15 @@ use Doctrine\ORM\EntityManagerInterface;
 use App\Entity\Pokemon;
 use App\Repository\PokemonRepository;
 use Symfony\Component\HttpKernel\Exception\HttpException;
+use App\Manager\SaverTrait;
 
 /**
  * Handle CRUD
  */
 class PokemonManager 
 {
+    use SaverTrait;
+
     private $em;
 
     private $pokemonRepository;
@@ -22,14 +25,19 @@ class PokemonManager
         $this->pokemonRepository = $pokemonRepository;
     }
 
+
+    public function getAll(): array
+    {
+        return $this->pokemonRepository->findAll();
+    }
+
     public function create(string $name, string $summary): Pokemon
     {
         $pokemon = new Pokemon();
         $pokemon->setName($name);
         $pokemon->setSummary($summary);
 
-        $this->em->persist($pokemon);
-        $this->em->flush();
+        $this->save($pokemon);
 
         return $pokemon;
     }
@@ -45,17 +53,18 @@ class PokemonManager
         $pokemon->setName($name);
         $pokemon->setSummary($summary);
 
-        $this->em->persist($pokemon);
-        $this->em->flush();
+        $this->save($pokemon);
 
         return $pokemon;
     }
 
-    public function delete(int $id)
+    public function delete(int $id): Pokemon
     {
         $pokemon = $this->pokemonRepository->find($id);
 
         $this->em->remove($pokemon);
         $this->em->flush();
+
+        return $pokemon;
     }
 }
